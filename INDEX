@@ -1,0 +1,26 @@
+UOPMDISFEB2021-package
+                        Visualizing 2012 Presidential Dialogue
+cleandf                 Grouping tokenised dialogue by turn
+filterwordsdf           Filtering dataframe to display words that are
+                        entered in a vector form
+finalfunc               This function put together cleandf,
+                        filterwordsdf and graphdf.
+graphdf                 Graphing frequency of words over time of the
+                        presidential debate
+graphtfidf              Function to produce the tokenize dialogue by
+                        person
+graphtopnwords          graphtopnwords, a function which combines
+                        mostwords & finalfunc which return result in
+                        graph
+loaddfgithub            Sample Data Loading from github
+mostwords               Finding the most words in data
+pedf                    The 2012 US presidential debate dataset
+persontop               Group the result by person and find their top n
+                        most used words
+sortnorder              Zipf's Law, Sort and arrange data
+tokenwperson            tokenize the dialogue, by person and words
+tokenwstop              Zipf's Law, tokenize with stopwords
+zipffinal               Zipf's Law, Final Graph
+zipffinalperson         Zipf's Law, Final Graph by Speaker
+zipfgraph               Zipf's Law, to produce a Zipf Graph
+zipfgraphperson         Zipf's Law, to produce a Zipf Graph by Speaker

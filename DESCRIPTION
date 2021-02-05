@@ -1,0 +1,20 @@
+Package: UOPMDISFEB2021
+Type: Package
+Title: Visualizing 2012 Presidential Dialogue
+Version: 0.1.0
+Author: Cassandria Goh (10715753) Lim Jun Yong (10715755) Muhammad Firdaus (10715756) Lee Wei Jian (10715754)
+Maintainer: The package maintainer <zeon.sg@gmail.com>
+Description: UNIVERSITY OF PLYMOUTH and MANAGEMENT DEVELOPMENT INSTITUTE OF SINGAPORE
+    Course: Master of Science Data Science and Business Analytics (MDSD5 2001A, MDSE2 2001A)
+    Module Code and Title : MATH513 Big Data and Social Network Visualization
+    Module Tutor : Dr Loo Poh Kok
+    Assessment : Report
+License: MIT
+Imports: ggplot2, gridExtra, scales, tidytext, tidyverse, dplyr
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
+Built: R 4.0.3; ; 2021-02-05 05:20:29 UTC; windows

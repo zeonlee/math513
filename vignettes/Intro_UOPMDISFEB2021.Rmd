@@ -1,0 +1,459 @@
+---
+title: "Intro_UOPMDISFEB2021"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Intro_UOPMDISFEB2021}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup,message=FALSE,warning=FALSE}
+library(UOPMDISFEB2021)
+library(ggplot2)
+library(gridExtra)
+library(tidytext)
+library(tidyverse)
+library(scales)
+library(dplyr)
+```
+
+Course : Master of Science Data Science and Business Analytics  
+Course code: (MDSD5 2001A, MDSE2 2001A)  
+Module Code and Title : MATH513 Big Data and Social Network Visualization     
+Module Tutor : Dr Loo Poh Kok  
+Assessment : Report  
+Due Date : February 2021  
+Weighting within Module : 60% (100 marks)  
+
+
+Students:   
+Cassandria Goh (10715753)   
+Lim Jun Yong (10715755)   
+Muhammad Firdaus (10715756)   
+Lee Wei Jian (Zeon) (10715754) 
+
+
+Although the binary package has already been provided, there is also an option to install the package from GitHub. Please follow the steps below to do so:  
+
+1. install.packages("devtools")   
+2. library(devtools)    
+3. devtools::install_github("zeonlee/math513")   
+3. library(UOPMDISFEB2021)   
+
+Note: in the event where there is an installation error due to package 'fansi', please restart rstudio, run install.packages("fansi") then devtools::install_github("zeonlee/math513") and skip empty for installation    
+
+# Visualizing 2012 Presidential Dialogue   
+
+This report contains functions created to visualize the 2012 US Presidential Debate Dialogue. 
+
+Firstly, please download our sample data with code below: 
+
+```{r,message=FALSE,warning=FALSE} 
+loaddfgithub<- function(){
+  githubURL <- "https://github.com/zeonlee/math513/raw/main/pedf.RData"
+  load(url(githubURL), .GlobalEnv)
+} 
+
+loaddfgithub() 
+``` 
+
+This will load our sample data in your R environment as object "pedf" 
+
+## Section 3.1 Change of Word Frequency Over Time   
+
+This section will show the change of words frequency over time.  this visual can be created with the following steps:  
+
+1. Tokenizing the dataframe such that the count of each word is given per turn and no stop words are included.  
+
+2. Filter the words produced by words that we want to view on the graph 
+3. Graph the resulting dataframe after tokenizing and filtering.  
+
+Functions used from library(UOPMDISFEB2021) are:   
+
+cleandf(), filterwordsdf(), graphdf() and finalfunc()   
+
+1. Tokenize the dataframe 
+
+In order to tokenize the dialogue within the data frame provided, the function unnest_tokens (tidytext)  is called. This will return a data frame splitting the person’s dialogue into individual words. Then, we make use of the anti_join (dplyr) function to remove stop words (tidytext) from the new dataframe. Lastly, we count and group the words by turn and return the final data frame which tells us the number of times, n, and proportion, p, that each word appears per turn. 
+
+```{r,message=FALSE, warning=FALSE} 
+cleandf <- function(data) { 
+  token <- data %>%  
+    unnest_tokens(words, dialogue) 
+  clean <- token %>%  
+    anti_join(stop_words, by = c("words" = "word")) 
+  final <- clean %>%  
+    count(turn, words) %>% 
+    group_by(turn) %>%  
+    mutate(p = n/sum(n)) 
+  return (final) 
+} 
+``` 
+
+2. Filter the tokenized data frame 
+
+To filter the words which we would like to visualize, we make use of the filter function (dplyr) and %in%. 
+
+```{r,message=FALSE,warning=FALSE} 
+filterwordsdf <- function(data, vec) { 
+  return(filter(data, words %in% vec)) 
+} 
+``` 
+
+3. Graph the resulting data 
+
+Finally, using various ggplot2 functions, graphdf graphs the data which has been tokenized and filtered is created. 
+
+```{r,message=FALSE,warning=FALSE} 
+graphdf <- function(data) { 
+  graph <- data %>%  
+    ggplot(mapping = aes(x = turn, y = p, colour = words)) +  
+             geom_point() + 
+             facet_wrap(~ words, scales = "free") + 
+    geom_vline(xintercept = c(541, 1798), linetype = "dashed") + 
+    geom_smooth() +  
+    geom_smooth(method = "lm", se = FALSE, colour = "black") + 
+    scale_y_continuous(label = percent) +  
+    theme(legend.position = "none") + 
+    labs(title = "Change of Word Frequency in the 2012 Presidential Debate Over Time", x = "Debate turn number", y = "Percentage of words in 2012 presidental debate") 
+  return (graph) 
+}
+``` 
+
+4. Putting it all together 
+
+A final function is created to tie all of the functions together neatly.  
+
+```{r,message=FALSE,warning=FALSE} 
+finalfunc <- function(data, vec){ 
+  clean <- cleandf(data) 
+  filter <- filterwordsdf(clean, vec) 
+  graph <- graphdf(filter) 
+  return (graph) 
+} 
+``` 
+
+Now using finalfunc, pedf is called with the following vector which contains words that are hot topics in most U.S. presidential debates.  
+
+c("china", "dollar", "energy", "jobs", "military", "people") 
+
+```{r,message=FALSE, fig.width=7,fig.height=4} 
+finalfunc(pedf, c("china", "dollar", "energy", "jobs", "military", "people")) 
+``` 
+
+### Discussion of the result 
+
+Before we begin with the analysis, there are a few things which need to be noted:  
+
+The scales are not fixed and since they are free scales, R will plot according to what fits the “best”  
+
+There were 3 debates in total, and the 2 vertical dotted lines located at turn 541 and 1798 indicate the end of debates 1 and 2, respectively. 
+From what has been shown, the following can be observed: 
+
+It is almost possible to determine which debate was centered around what topic based on which side of the vertical lines the dots are more concentrated.  
+
+The subject of China was not mentioned until the second debate 
+
+“Dollar” was discussed more in the first 2 debates but not as much in the last 
+
+“Energy” was mainly talked about in the second debate 
+
+The third debate likely discussed military as quite a lot of the dots are clustered after the second vertical line. 
+
+It is interesting to note that both topics of “jobs” and “people” remain consistent throughout all three debates. Hence, this graph also illustrates what the important topics to bring up during a presidential debate – perhaps the topic which will win the candidates more votes (always mention people!).  
+
+The topic of “people” is the only topic in this list which has an upward trend. This might indicate that “people” might even be more important than “jobs”. 
+
+
+## Section 3.2, Plotting the words with the highest tf-idf values   
+
+The tf-idf (term frequency – inverse document frequency) index calculates the frequency of a term, but adjusts that value for how rarely it appears. The proper formula for it is: tf-idf = tf x idf. The term frequency is simply how often a certain word appears in a document. The inverse document frequency will increase the weight of words that are not used very much and decrease weight for words that occur more often.  
+
+Within this section, we will visualize the highest tf-idf word per person in the debate. In order to do so, we can do the following steps:
+
+1. Tokenize the dialogue as usual, but this time the tf_idf, tf and idf indexes are included in the resulting dataframe  
+
+2. Group the result by person and find their top n words (10 in the case of this assignment) 
+
+3. Graph the result 
+
+Functions used from library(UOPMDISFEB2021) are: 
+
+tokenwperson(), persontop(), graphtfidf() and graphtfidf() 
+
+1. Tokenize the dialogue   
+
+This function will tokenize the dialogue and remove stop words. However, instead of counting by turn and words like in section 3.1, this function will count by person and words. Using the bind_tf_idf function from tidytext, it will return the tf, idf, and tf-idf values as well. Apart from the data frame, this function also contains another optional parameter, vector, which is a vector which can be entered if the user would like to filter out other words apart from the standard stop words.  
+
+```{r,message=FALSE,warning=FALSE} 
+tokenwperson <- function(data, vector = ""){ 
+  token <- data %>%  
+    unnest_tokens(words, dialogue) 
+  # remove the stop words  
+  clean <- token %>%  
+    filter(!(words %in% c(stop_words$word, vector))) %>% 
+    count(person, words) %>%  
+    bind_tf_idf(words, person, n) 
+  return (clean) 
+}
+``` 
+
+2. Group the result by person and find their top n most used words 
+
+With the tokenized dialogue and the numbers required, the persontop function will group the data by person and use the slice max function from dplyr to return the top n words (with ties) mentioned per person. 
+
+```{r,message=FALSE, warning=FALSE} 
+persontop <- function(data, n, vector = "") 
+{ 
+  result <- data %>%  
+    tokenwperson(vector) %>%  
+    group_by(person) %>%  
+    slice_max(order_by = tf_idf, n = n, with_ties = TRUE) 
+  return(result) 
+} 
+```  
+
+3. Function to produce a graph we want 
+
+Using ggplot2, we create a graph which will illustrate the top n words that each person has mentioned. This time, instead of creating a new function to tie everything together, the functions are built into the graph plot. We have done this simply to show that there are other ways to build upon functions.  
+
+```{r,message=FALSE,warning=FALSE} 
+graphtfidf <- function(data, n = 10, vector = ""){ 
+  graph <- data %>% 
+    persontop(n = n, vector) %>% 
+    ggplot(mapping = aes(x = reorder(words,tf_idf), y = tf_idf, fill = person)) + 
+    geom_col() +  
+    facet_wrap(~person, scales = "free", ncol = 2) + 
+    coord_flip() + 
+    theme(legend.position = "none", axis.title.y = element_blank()) + 
+    labs(title = "Highest tf-idf Words in the 2012 US Presidential Debate", x = "tf-idf index") 
+  return(graph) 
+}
+``` 
+
+4. Executing the function 
+
+Finally, we execute our function. Before doing so, we will need to declare a vector called add_stopw for the additional stop words in the pedf dataset. With this, it is possible to see the strength of the function as it allows users to have their own stop words on top of the stop words within the tidytext library.  
+
+```{r,message=FALSE, fig.width=7,fig.height=4} 
+
+add_stopw <- c("mister", "governor", "president", "romney","romney's", "president's") 
+
+graphtfidf(pedf, vector = add_stopw) 
+
+``` 
+
+### Discussion of the result 
+
+Before going into analysis, there are a few things to take note of:  
+
+The graph’s x and y axis are plotted with free scales; hence, they differ from each other although they might look similar. 
+
+Although it is possible to compare the tf-idf value between words said per person, a limitation of using the tf-idf value is that it is not possible to compare the tf-idf value of words across different people. This is because the value is affected by the amount that each person speaks throughout the entire debate – the more turns that they get, the lower the tf-idf value. In fact, we can clearly see the inverse relationship of number of turns each person got and their highest tf-idf value by running the following code:  
+
+```{r,message=FALSE,warning=FALSE} 
+
+left_join(persontop(pedf, 1) %>% select(c("person", "tf_idf")), pedf %>% group_by(person) %>% count()) 
+
+``` 
+ 
+We can gather a few things from this graph:  
+
+The hosts for the first, second and third presidential debates were Lehreh, Crowley and Schieffer respectively. Looking through the highest tf-idf words for Lehrer, Crowley and Schieffer, it is possible to determine the topics each presidential debate (first, second or third) were about.  
+
+Lehrer: First presidential debate (topic: domestic policy) 
+The first presidential debate centered around domestic policies – specifically with jobs, federal deficit/debt, entitlements, health care and the role of government. It is possible to deduce this from Lehrer’s second highest tf-idf word “federal”.  
+
+Crowley: Second presidential debate (topic: domestic and foreign issues) 
+The second presidential debate was a town hall meeting where questions came from New Yorkers. Although there were no specific segments, some of the question topics involved: unemployment, energy, tax, immigrants.  
+We see “unemployment” as Crowley’s second highest tf-idf word. Farther, under the graph for “QUESTION” there is “chu” mentioned in reference to Obama’s energy secretary. Through that mention, we can tell that energy was also a key topic in the second debate 
+
+Schieffer: Third presidential debate (topic : foreign policy) 
+Schieffer’s tf-idf values are perhaps the best example use case of tf-df because if we take a look at his top words, we see that many of them involve topics about foreign countries. For example, Schieffer mentions “pakistan”, “soviet”, “war”, “iran”, “afghanistan” which are all words that are extremely relevant to countries which America has conflicts with.  
+
+A word which has a high tf-idf score for both Obama and Romney is “jobs”. Recall that it was mentioned above that “jobs” was one of the words which appeared frequently throughout all three debates. Hence, its tf-idf value for Obama and Romney makes sense.  
+
+ 
+
+## Section 3.3, Zipf’s Law 
+
+Zipf’s Law states that in a group of documents, the frequency of a word is inversely proportional to its rank. Meaning that the most frequent word will occur twice as often as the second most frequent word, three times as often as the third most frequent word, etc. In this section we will apply Zipf's Law to our text analysis. However, before continuing, it is important to note that when using Zipf’s Law, stop words should not be removed.  
+
+Functions used from library(UOPMDISFEB2021) are:   
+
+tokenwstop(), sortnorder(), zipfgraph() and zipffinal() 
+
+1. Tokenize with stop words 
+
+Since for Zipf’s Law, the stop words need to be kept, a new function to tokenize with stop words will need to be created. The function tokenwstop will also use bind_tf_idf to find the tf, idf and tf-idf value of all words – although only the tf value will be plotted. 
+
+```{r,message=FALSE,warning=FALSE} 
+tokenwstop <- function(data){ 
+  token <- data %>%  
+    unnest_tokens(words, dialogue) %>%  
+    count(person, words) %>%  
+    bind_tf_idf(words, person, n)  
+  return (token) 
+}
+``` 
+
+
+2. Sort and arrange data 
+
+This next function will group the words by person, sort them according to the tf value, select the top 500 (with ties) words and assign ranks to them based on the order they are in. The ranking will then be used as the x-axis in the Zipf’s Law graph. 
+
+```{r,message=FALSE,message=FALSE} 
+sortnorder <- function(data){ 
+  sorted<- data %>%  
+    group_by(person) %>% 
+    slice_max(order_by = tf, n = 500, with_ties = TRUE) %>% 
+    mutate(rank = row_number())  
+  return(sorted) 
+}
+``` 
+
+3. Produce graph 
+
+Zipfgraph is a function that creates a visual for the tokenized and arranged data using ggplot2. It should be noted that the axis are plotted with log10 scaling. This was done in order to display the data neatly, otherwise it will be difficult to see the difference between the tf values for words of higher ranks. 
+
+```{r,message=FALSE,warning=FALSE} 
+zipfgraph <- function(data) 
+{ 
+  graph <- ggplot(data, mapping = aes (x = rank, y = tf)) +  
+    geom_line(mapping = aes(colour = person), size = 1) +  
+    geom_smooth(method = 'lm', colour = 'black', size = 0.5, se = FALSE) + 
+    scale_y_log10() + scale_x_log10() + 
+    labs(title = "Zipf's Law for the 2012 US Presidential Debate dataset", y = "Term frequency(tf)", x = "Word rank") 
+  return(graph) 
+}
+``` 
+
+4. Call the functions together 
+
+Although above, we have shown two different ways of combining the functions created, our preferred way is to create the functions separately and call them together in one final function – hence, that is the method used here.  
+
+```{r,message=FALSE,warning=FALSE} 
+zipffinal <- function(data) 
+{ 
+  tokenized <- tokenwstop(data) 
+  sorted <- sortnorder(tokenized) 
+  graph <- zipfgraph(sorted) 
+  return(graph) 
+}
+``` 
+
+5. Calling the Zipf's Law plot 
+
+Finally, the zipffinal functions is called with pedf, and we can nicely view the Zipf’s Law plot formed from the dataset.  
+
+```{r,message=FALSE, fig.width=7,fig.height=4} 
+
+zipffinal(pedf) 
+
+``` 
+
+### Discussion of the result 
+
+With the graph, it is possible to see that Zipf’s law applies on the 2012 Presidential debate dialogue due to the almost linear nature of the line graph – farther enhanced by the smooth graph. One might think that the graph displayed should look more like a logarithmic graph, but it is important to note that the axes have already been adjusted for log.  
+
+Although the Zipf’s Law graph produced above is nice, to some it might be cluttered and tough to view visuals for each person, hence we can use ggplot2’s facet_wrap function to separate the graph per person.  
+
+First, we still follow the same steps of tokenizing and sorting our data above, however, the graph function will need to be amended to include the facet_wrap function and the legend should be removed as it will be redundant to have it.  
+
+```{r,message=FALSE,warning=FALSE} 
+zipfgraphperson <- function(data)  
+{  
+  graph <- ggplot(data, mapping = aes (x = rank, y = tf)) +   
+    geom_line(mapping = aes(colour = person), size = 1) +   
+    geom_smooth(method = 'lm', colour = 'black', size = 0.5, se = FALSE) +  
+    facet_wrap(~person)+  
+    scale_y_log10() + scale_x_log10() +  
+    labs(title = "Zipf's Law for the 2012 US Presidential Debate dataset",  
+         y = "Term frequency(tf)", x = "Word rank") +  
+    theme(legend.position = "none") 
+  return(graph)  
+}
+``` 
+
+  
+
+With the new function to graph Zipf’s Law, we call the same steps as function zipffinal but this time include zipfgraphperson as the choice for graphing. This is also another benefit to using the method of a final function to call all the functions together as it’s more concise and easier to see what is happening.  
+
+```{r,message=FALSE, fig.width=7,fig.height=4} 
+zipffinalperson <- function(data) 
+{ 
+  tokenized <- tokenwstop(data) 
+  sorted <- sortnorder(tokenized) 
+  graph <- zipfgraphperson(sorted) 
+  return(graph) 
+} 
+``` 
+
+Calling zipffinalperson function on pedf 
+
+```{r,message=FALSE, fig.width=7,fig.height=4} 
+
+zipffinalperson(pedf) 
+
+``` 
+
+With this segmentation, it is now clearer that each person’s dialogue does follow Zipf’s law. However, Romney and Obama’s dialogue lines fit better to the linear regression model compared to everyone else. This smoother curve might come from Obama and Romney both having more number of turns during the debates.  
+
+
+## Section 3.5  
+
+To build off of section 3.1, instead of entering the vector of words which we want to view, we have created another function which will draw different insights from the data provided.  
+
+In order to get the actual insights from the data, we have another function mostwords() for a vector, sorted descending of words count. 
+
+
+```{r,message=FALSE,warning=FALSE} 
+mostwords <- function(data, m = 10, vector = ""){ 
+  token <- data %>%  
+    unnest_tokens(words, dialogue) 
+  clean <- token %>%  
+    filter(!(words %in% c(stop_words$word, vector))) %>% 
+#     anti_join(stop_words, by = c("words" = "word")) %>% 
+    count(words, sort = TRUE) %>% 
+    mutate(proportion = n/sum(n)) %>% 
+    head(m) 
+}
+``` 
+
+With ggplot2, the top n words can now be visualized.  
+
+```{r,message=FALSE, warning=FALSE} 
+graphtopnwords <- function(data, n, vector = ""){ 
+  topnwordsinfo <- mostwords(data, n, vector) 
+  topwords <- topnwordsinfo$words # this is stored as an array 
+  graph <- finalfunc(data, topwords) 
+  return (graph) 
+}
+``` 
+
+A deeper insight with the top ranked words. 
+
+```{r,message=FALSE,fig.width=7,fig.height=4} 
+
+graphtopnwords(pedf, 10, add_stopw) 
+
+``` 
+
+This graph supplies a better visual for the top n words, however it does not give the added benefit of seeing the distribution of specific words throughout the course of the 3 debates.  
+
+# References 
+
+“10 Things You Didn't Know About Steven Chu.” U.S. News & World Report, U.S. News & World Report, www.usnews.com/news/obama/articles/2008/12/30/10-things-you-didnt-know-about-steven-chu.  
+
+“October 16, 2012 Debate Transcript.” CPD: October 16, 2012 Debate Transcript, www.debates.org/voter-education/debate-transcripts/october-16-2012-the-second-obama-romney-presidential-debate/.  
+
+“October 22, 2012 Debate Transcript.” CPD: October 22, 2012 Debate Transcript, www.debates.org/voter-education/debate-transcripts/october-22-2012-the-third-obama-romney-presidential-debate/.  
+
+“October 3, 2012 Debate Transcript.” CPD: October 3, 2012 Debate Transcript, www.debates.org/voter-education/debate-transcripts/october-3-2012-debate-transcript/. 
