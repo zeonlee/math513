@@ -17,4 +17,4 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.1
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
-Built: R 4.0.3; ; 2021-02-05 05:20:29 UTC; windows
+
